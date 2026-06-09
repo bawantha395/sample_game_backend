@@ -4,7 +4,7 @@
 
 # S3 bucket for Terraform state
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "sample-game-app-terraform-state-750761633674"
+  bucket = "sample-game-app-terraform-state-2026-06-09"
 
   tags = {
     Name        = "Terraform State Bucket"
