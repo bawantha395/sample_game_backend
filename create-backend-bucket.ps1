@@ -19,15 +19,15 @@ Set-Location terraform
 
 # Create S3 bucket using AWS CLI
 Write-Host "Creating S3 bucket..." -ForegroundColor Cyan
-aws s3 mb s3://sample-game-app-terraform-state-750761633674 --region us-east-1
+aws s3 mb s3://sample-game-app-terraform-state-2026-06-09 --region us-east-1
 
 # Enable versioning
 Write-Host "Enabling S3 bucket versioning..." -ForegroundColor Cyan
-aws s3api put-bucket-versioning --bucket sample-game-app-terraform-state-750761633674 --versioning-configuration Status=Enabled
+aws s3api put-bucket-versioning --bucket sample-game-app-terraform-state-2026-06-09 --versioning-configuration Status=Enabled
 
 # Enable encryption
 Write-Host "Enabling S3 bucket encryption..." -ForegroundColor Cyan
-aws s3api put-bucket-encryption --bucket sample-game-app-terraform-state-750761633674 --server-side-encryption-configuration '{
+aws s3api put-bucket-encryption --bucket sample-game-app-terraform-state-2026-06-09 --server-side-encryption-configuration '{
     "Rules": [
         {
             "ApplyServerSideEncryptionByDefault": {
@@ -39,7 +39,7 @@ aws s3api put-bucket-encryption --bucket sample-game-app-terraform-state-7507616
 
 # Block public access
 Write-Host "Blocking public access..." -ForegroundColor Cyan
-aws s3api put-public-access-block --bucket sample-game-app-terraform-state-750761633674 --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
+aws s3api put-public-access-block --bucket sample-game-app-terraform-state-2026-06-09 --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true"
 
 # Create DynamoDB table
 Write-Host "Creating DynamoDB table..." -ForegroundColor Cyan
@@ -79,7 +79,7 @@ Write-Host "Backend setup completed successfully!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Your Terraform state is now stored in:" -ForegroundColor White
-Write-Host "- S3 Bucket: sample-game-app-terraform-state-750761633674" -ForegroundColor White
+Write-Host "- S3 Bucket: sample-game-app-terraform-state-2026-06-09" -ForegroundColor White
 Write-Host "- DynamoDB Table: terraform-state-lock" -ForegroundColor White
 Write-Host ""
 Write-Host "GitHub Actions will now properly manage state across runs." -ForegroundColor Green
