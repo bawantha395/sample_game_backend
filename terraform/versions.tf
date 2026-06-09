@@ -10,7 +10,7 @@ terraform {
 
   # Remote state backend for GitHub Actions
   backend "s3" {
-    bucket         = "sample-game-app-terraform-state-750761633674"
+    bucket         = "sample-game-app-terraform-state-2026-06-09"
     key            = "sample-game-app/terraform.tfstate"
     region         = "us-east-1"
     encrypt        = true
