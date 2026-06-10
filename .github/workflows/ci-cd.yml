@@ -1,0 +1,322 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ prod, develop ]
+  pull_request:
+    branches: [ prod, develop ]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Choose action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+        - deploy
+        - destroy
+      environment:
+        description: 'Environment to target'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - prod
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+  ECR_REPOSITORY: task-management-app-${{ github.ref == 'refs/heads/prod' && 'prod' || 'dev' }}-repo
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  # Build and Test
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.action == 'deploy'
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: 12345
+          MYSQL_DATABASE: task_db
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Make Maven wrapper executable
+        run: chmod +x ./mvnw
+
+      - name: Run tests
+        run: ./mvnw clean test
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          MYSQL_HOST: localhost
+          MYSQL_PORT: 3306
+          MYSQL_DB: task_db_test
+          MYSQL_USER: root
+          MYSQL_PASS: Sula@991215
+
+      - name: Make Maven wrapper executable
+        run: chmod +x ./mvnw
+
+      - name: Build application
+        run: ./mvnw clean package -DskipTests
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/prod' && github.event_name == 'push'
+        with:
+          name: build-artifacts-${{ github.sha }}
+          path: target/*.jar
+          retention-days: 1
+          compression-level: 9
+
+  # Create Infrastructure First (Only when needed)
+  create-infrastructure:
+    name: Create Infrastructure
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: (github.ref == 'refs/heads/prod' || github.ref == 'refs/heads/develop') && (github.event_name != 'workflow_dispatch' || github.event.inputs.action == 'deploy')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Create Infrastructure (One-time Setup)
+        run: |
+          cd terraform
+          terraform init
+          
+          # Set environment based on branch or manual input
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
+          else
+            ENVIRONMENT="${{ github.ref == 'refs/heads/prod' && 'prod' || 'dev' }}"
+          fi
+          echo "Setting up infrastructure for environment: $ENVIRONMENT"
+          
+          # Select or create workspace
+          terraform workspace select $ENVIRONMENT || terraform workspace new $ENVIRONMENT
+          
+          # Check if infrastructure already exists
+          echo "🔍 Checking if infrastructure already exists..."
+          if terraform state list | grep -q "aws_vpc.main"; then
+            echo "✅ Infrastructure already exists in workspace: $ENVIRONMENT"
+            echo "Skipping creation to prevent duplicates"
+            exit 0
+          fi
+          
+          echo "📋 Planning new infrastructure for $ENVIRONMENT..."
+          terraform plan -var="environment=$ENVIRONMENT" -var="db_password=${{ github.ref == 'refs/heads/prod' && secrets.DB_PASSWORD_PROD || 'Sula@991215' }}" -var="db_username=${{ github.ref == 'refs/heads/prod' && secrets.DB_USERNAME_PROD || 'admin' }}" -var="ses_verified_email=${{ github.ref == 'refs/heads/prod' && secrets.SES_FROM_EMAIL || '' }}" -var="ses_username=${{ github.ref == 'refs/heads/prod' && secrets.SES_USERNAME || '' }}" -var="ses_password=${{ github.ref == 'refs/heads/prod' && secrets.SES_PASSWORD || '' }}"
+          
+          echo "🚀 Creating new infrastructure for $ENVIRONMENT..."
+          terraform apply -auto-approve -var="environment=$ENVIRONMENT" -var="db_password=${{ github.ref == 'refs/heads/prod' && secrets.DB_PASSWORD_PROD || 'Sula@991215' }}" -var="db_username=${{ github.ref == 'refs/heads/prod' && secrets.DB_USERNAME_PROD || 'admin' }}" -var="ses_verified_email=${{ github.ref == 'refs/heads/prod' && secrets.SES_FROM_EMAIL || '' }}" -var="ses_username=${{ github.ref == 'refs/heads/prod' && secrets.SES_USERNAME || '' }}" -var="ses_password=${{ github.ref == 'refs/heads/prod' && secrets.SES_PASSWORD || '' }}"
+          
+          echo "✅ Infrastructure created successfully for $ENVIRONMENT!"
+
+  # Build and Push Docker Image
+  build-and-push:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [build-and-test, create-infrastructure]
+    if: (github.ref == 'refs/heads/prod' || github.ref == 'refs/heads/develop') && (github.event_name != 'workflow_dispatch' || github.event.inputs.action == 'deploy')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Build a docker container and push it to ECR
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+  # Deploy Application (Regular Deployments)
+  deploy-application:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: (github.ref == 'refs/heads/prod' || github.ref == 'refs/heads/develop') && github.event_name != 'workflow_dispatch'
+    
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update ECS Service
+        run: |
+          ENVIRONMENT="${{ github.ref == 'refs/heads/prod' && 'prod' || 'dev' }}"
+          echo "Updating ECS service for environment: $ENVIRONMENT"
+          
+          # Define cluster and service names based on environment
+          CLUSTER_NAME="task-management-app-$ENVIRONMENT-cluster"
+          SERVICE_NAME="task-management-app-$ENVIRONMENT-service"
+          
+          echo "Cluster: $CLUSTER_NAME"
+          echo "Service: $SERVICE_NAME"
+          
+          # Update ECS service to pull new image
+          aws ecs update-service \
+            --cluster $CLUSTER_NAME \
+            --service $SERVICE_NAME \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Wait for deployment
+        run: |
+          ENVIRONMENT="${{ github.ref == 'refs/heads/prod' && 'prod' || 'dev' }}"
+          CLUSTER_NAME="task-management-app-$ENVIRONMENT-cluster"
+          SERVICE_NAME="task-management-app-$ENVIRONMENT-service"
+          
+          echo "Waiting for deployment to complete..."
+          aws ecs wait services-stable \
+            --cluster $CLUSTER_NAME \
+            --services $SERVICE_NAME \
+            --region ${{ env.AWS_REGION }}
+          
+          echo "✅ Deployment completed successfully!"
+
+
+  # Notification
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-application, create-infrastructure, destroy-infrastructure]
+    if: always()
+    
+    steps:
+      - name: Notify on Success
+        if: success()
+        run: |
+          echo "Deployment successful! 🚀"
+          # Add notification logic here
+
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "Deployment failed! ❌"
+          # Add notification logic here
+
+
+  # Destroy Infrastructure
+  destroy-infrastructure:
+    name: Destroy Infrastructure
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Destroy Infrastructure
+        run: |
+          cd terraform
+          terraform init
+          terraform workspace select ${{ github.event.inputs.environment }} || terraform workspace new ${{ github.event.inputs.environment }}
+          
+          echo "🗑️ Starting complete infrastructure destruction..."
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          
+          # First, try to destroy with Terraform
+          echo "📋 Planning destruction..."
+          terraform plan -destroy -var="environment=${{ github.event.inputs.environment }}" -var="db_password=${{ github.event.inputs.environment == 'prod' && secrets.DB_PASSWORD_PROD || 'Sula@991215' }}" -var="db_username=${{ github.event.inputs.environment == 'prod' && secrets.DB_USERNAME_PROD || 'admin' }}" -var="ses_verified_email=${{ github.event.inputs.environment == 'prod' && secrets.SES_FROM_EMAIL || '' }}" -var="ses_username=${{ github.event.inputs.environment == 'prod' && secrets.SES_USERNAME || '' }}" -var="ses_password=${{ github.event.inputs.environment == 'prod' && secrets.SES_PASSWORD || '' }}"
+          
+          echo "🚀 Destroying infrastructure..."
+          terraform destroy -auto-approve -var="environment=${{ github.event.inputs.environment }}" -var="db_password=${{ github.event.inputs.environment == 'prod' && secrets.DB_PASSWORD_PROD || 'Sula@991215' }}" -var="db_username=${{ github.event.inputs.environment == 'prod' && secrets.DB_USERNAME_PROD || 'admin' }}" -var="ses_verified_email=${{ github.event.inputs.environment == 'prod' && secrets.SES_FROM_EMAIL || '' }}" -var="ses_username=${{ github.event.inputs.environment == 'prod' && secrets.SES_USERNAME || '' }}" -var="ses_password=${{ github.event.inputs.environment == 'prod' && secrets.SES_PASSWORD || '' }}"
+          
+          # Clean up any remaining resources that Terraform might have missed
+          echo "🧹 Cleaning up any remaining resources..."
+          
+          # Delete ECR repositories (force delete)
+          ECR_REPOS=$(aws ecr describe-repositories --region ${{ env.AWS_REGION }} --query "repositories[?contains(repositoryName, 'task-management-app-${{ github.event.inputs.environment }}')].repositoryName" --output text 2>/dev/null || echo "")
+          for repo in $ECR_REPOS; do
+            echo "  🗑️ Force deleting ECR repository: $repo"
+            aws ecr delete-repository --repository-name $repo --force --region ${{ env.AWS_REGION }} 2>/dev/null || echo "    Repository $repo not found or already deleted"
+          done
+          
+          # Delete CloudWatch log groups
+          LOG_GROUPS=$(aws logs describe-log-groups --region ${{ env.AWS_REGION }} --query "logGroups[?contains(logGroupName, 'task-management-app-${{ github.event.inputs.environment }}')].logGroupName" --output text 2>/dev/null || echo "")
+          for lg in $LOG_GROUPS; do
+            echo "  🗑️ Deleting CloudWatch log group: $lg"
+            aws logs delete-log-group --log-group-name $lg --region ${{ env.AWS_REGION }} 2>/dev/null || echo "    Log group $lg not found or already deleted"
+          done
+          
+          # Delete any orphaned security groups
+          SECURITY_GROUPS=$(aws ec2 describe-security-groups --region ${{ env.AWS_REGION }} --query "SecurityGroups[?contains(GroupName, 'task-management-app-${{ github.event.inputs.environment }}')].GroupId" --output text 2>/dev/null || echo "")
+          for sg in $SECURITY_GROUPS; do
+            echo "  🗑️ Deleting security group: $sg"
+            aws ec2 delete-security-group --group-id $sg --region ${{ env.AWS_REGION }} 2>/dev/null || echo "    Security group $sg not found or already deleted"
+          done
+          
+          echo "✅ Infrastructure destruction completed!"
+
+      - name: Notify Destroy Success
+        run: |
+          echo "Infrastructure destroyed successfully! 🗑️"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          # Add notification logic here
