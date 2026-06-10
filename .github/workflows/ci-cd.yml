@@ -67,7 +67,7 @@ jobs:
         run: chmod +x ./mvnw
 
       - name: Run tests
-        run: ./mvnw clean test
+        run: mvn clean test
         env:
           SPRING_PROFILES_ACTIVE: test
           MYSQL_HOST: localhost
@@ -80,7 +80,7 @@ jobs:
         run: chmod +x ./mvnw
 
       - name: Build application
-        run: ./mvnw clean package -DskipTests
+        run: mvn clean package -DskipTests
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
