@@ -26,6 +26,10 @@ variable "db_password" {
   description = "Database password"
   type        = string
   sensitive   = true
+  validation {
+    condition     = length(var.db_password) >= 8 && can(regex("^[a-zA-Z0-9!#$%&()*+,\\-.:;<=>?^\\[\\]_`{|}~]+$", var.db_password))
+    error_message = "The db_password must be at least 8 characters long and contain only printable ASCII characters (excluding /, @, \", and space)."
+  }
 }
 
 variable "db_instance_class" {

@@ -61,8 +61,16 @@ terraform init
 - **S3 Bucket Name**: Must be globally unique. Use `sample-game-app-tfstate-<YOUR_ACCOUNT_ID>`.
 - **DynamoDB Table**: `terraform-state-lock-<YOUR_ACCOUNT_ID>` (for state locking).
 - **Backend Configuration**: After creating the bucket and table, update `terraform/versions.tf` with the correct names before running the main deployment.
+- **Database Password**: Must be at least 8 characters long and contain only printable ASCII characters (excluding `/`, `@`, `"`, and space).
 
 ## Troubleshooting
+
+### If RDS Password fails:
+If you see `InvalidParameterValue: Invalid master password`, ensure your `db_password` meets the requirements:
+1. Minimum 8 characters.
+2. Only printable ASCII characters.
+3. Does NOT contain `/`, `@`, `"`, or space.
+4. If using GitHub Actions, update the `DB_PASSWORD` secret.
 
 ### If S3 bucket already exists:
 If you see `BucketAlreadyExists`, someone else might have taken the bucket name. In `backend-setup.tf`, we use your AWS Account ID to help prevent this. If it still fails, update the `bucket` name in `backend-setup.tf`.
