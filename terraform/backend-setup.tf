@@ -4,7 +4,7 @@
 
 # S3 bucket for Terraform state
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "sample-game-app-terraform-state-2026-06-09"
+  bucket = "sample-game-app-tfstate-${data.aws_caller_identity.current.account_id}"
 
   tags = {
     Name        = "Terraform State Bucket"
@@ -12,6 +12,8 @@ resource "aws_s3_bucket" "terraform_state" {
     Purpose     = "terraform-state"
   }
 }
+
+data "aws_caller_identity" "current" {}
 
 # S3 bucket versioning
 resource "aws_s3_bucket_versioning" "terraform_state" {

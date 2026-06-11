@@ -10,7 +10,7 @@ environment = "prod"
 # Database Configuration
 db_username = "admin"
 # db_password = "REMOVED_FOR_SECURITY"  # Use environment variable or GitHub secrets for production
-db_instance_class = "db.t3.small"  # Use db.t3.small for production
+db_instance_class = "db.t3.micro"  # Use db.t3.micro for free tier
 
 # Application Configuration
 app_port  = 8080
