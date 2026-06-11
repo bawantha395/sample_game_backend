@@ -66,11 +66,19 @@ terraform init
 ## Troubleshooting
 
 ### If RDS Password fails:
-If you see `InvalidParameterValue: Invalid master password` from the AWS provider, ensure your `db_password` meets the requirements:
-1. Minimum 8 characters.
-2. Only printable ASCII characters.
-3. Does NOT contain `/`, `@`, `"`, or space.
-4. If using GitHub Actions, update the `DB_PASSWORD` secret.
+If you see `InvalidParameterValue: Invalid master password` from the AWS provider, it means your `db_password` secret is currently invalid for AWS RDS.
+
+**Password Requirements:**
+1. **Length**: At least 8 characters.
+2. **Characters**: Only printable ASCII characters.
+3. **Disallowed Characters**: Must **NOT** contain `/` (slash), `@` (at sign), `"` (double quote), or spaces.
+
+**Immediate Fix:**
+1. Go to your GitHub Repository.
+2. Navigate to **Settings** -> **Secrets and variables** -> **Actions**.
+3. Edit the `DB_PASSWORD` secret.
+4. Set it to a valid value, for example: `MySafePassword2026!` (Note: avoid any trailing spaces when copy-pasting).
+5. Re-run the failed GitHub Action.
 
 ### If S3 bucket already exists:
 If you see `BucketAlreadyExists`, someone else might have taken the bucket name. In `backend-setup.tf`, we use your AWS Account ID to help prevent this. If it still fails, update the `bucket` name in `backend-setup.tf`.

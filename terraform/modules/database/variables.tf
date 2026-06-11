@@ -19,7 +19,7 @@ variable "db_username" {
 }
 
 variable "db_password" {
-  description = "Database password"
+  description = "Database password (Must be at least 8 chars, no /, @, \", or space)"
   type        = string
   sensitive   = true
 }

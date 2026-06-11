@@ -24,6 +24,7 @@ resource "aws_db_instance" "main" {
   db_name  = "game_db"
   username = var.db_username
   password = var.db_password
+  manage_master_user_password = false # Explicitly not managed by Secrets Manager if using var.db_password
 
   vpc_security_group_ids = [var.db_sg_id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
