@@ -10,7 +10,18 @@ This guide explains how to set up the Terraform backend infrastructure for state
 
 ## Setup Steps
 
-### 1. Create S3 Bucket for Terraform State
+### 1. Store Secrets in GitHub
+Ensure you have the following secrets set in your GitHub repository:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_ACCOUNT_ID`
+- `DB_PASSWORD` (Valid password for RDS)
+- `SES_USERNAME` (Optional, for email)
+- `SES_PASSWORD` (Optional, for email)
+
+The CI/CD pipeline is already configured to pick these up and pass them to Terraform.
+
+### 2. Create S3 Bucket for Terraform State
 
 You can use the `backend-setup.tf` file to create the infrastructure. It is configured to use your AWS Account ID to ensure the bucket name is unique globally.
 
@@ -61,7 +72,7 @@ terraform init
 - **S3 Bucket Name**: Must be globally unique. Use `sample-game-app-tfstate-<YOUR_ACCOUNT_ID>`.
 - **DynamoDB Table**: `terraform-state-lock-<YOUR_ACCOUNT_ID>` (for state locking).
 - **Backend Configuration**: After creating the bucket and table, update `terraform/versions.tf` with the correct names before running the main deployment.
-- **Database Password**: Must be at least 8 characters long and contain only printable ASCII characters (excluding `/`, `@`, `"`, and space).
+- **Database Password**: Must be at least 8 characters long and contain only printable ASCII characters (excluding `/`, `@`, `"`, and space). We use AWS SSM Parameter Store to securely pass the password to the application.
 
 ## Troubleshooting
 

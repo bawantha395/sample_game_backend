@@ -18,6 +18,31 @@ resource "aws_cloudwatch_log_group" "app" {
   tags = var.common_tags
 }
 
+# SSM Parameters for secrets
+resource "aws_ssm_parameter" "db_password" {
+  name        = "/${var.name_prefix}/db_password"
+  description = "Database password"
+  type        = "SecureString"
+  value       = var.db_password
+  tags        = var.common_tags
+}
+
+resource "aws_ssm_parameter" "ses_username" {
+  name        = "/${var.name_prefix}/ses_username"
+  description = "SES SMTP username"
+  type        = "SecureString"
+  value       = var.ses_username
+  tags        = var.common_tags
+}
+
+resource "aws_ssm_parameter" "ses_password" {
+  name        = "/${var.name_prefix}/ses_password"
+  description = "SES SMTP password"
+  type        = "SecureString"
+  value       = var.ses_password
+  tags        = var.common_tags
+}
+
 # ECS Task Definition
 resource "aws_ecs_task_definition" "app" {
   family                   = "${var.name_prefix}-task"
@@ -62,20 +87,23 @@ resource "aws_ecs_task_definition" "app" {
           value = var.db_username
         },
         {
-          name  = "MYSQL_PASS"
-          value = var.db_password
-        },
-        {
-          name  = "SES_USERNAME"
-          value = var.ses_username
-        },
-        {
-          name  = "SES_PASSWORD"
-          value = var.ses_password
-        },
-        {
           name  = "SES_FROM_EMAIL"
           value = var.ses_verified_email
+        }
+      ]
+
+      secrets = [
+        {
+          name      = "MYSQL_PASS"
+          valueFrom = aws_ssm_parameter.db_password.arn
+        },
+        {
+          name      = "SES_USERNAME"
+          valueFrom = aws_ssm_parameter.ses_username.arn
+        },
+        {
+          name      = "SES_PASSWORD"
+          valueFrom = aws_ssm_parameter.ses_password.arn
         }
       ]
 
