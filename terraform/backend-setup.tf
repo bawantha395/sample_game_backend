@@ -13,8 +13,6 @@ resource "aws_s3_bucket" "terraform_state" {
   }
 }
 
-data "aws_caller_identity" "current" {}
-
 # S3 bucket versioning
 resource "aws_s3_bucket_versioning" "terraform_state" {
   bucket = aws_s3_bucket.terraform_state.id
