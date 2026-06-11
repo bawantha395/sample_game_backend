@@ -47,10 +47,10 @@ After running the above commands, verify the setup:
 
 ```bash
 # Check S3 bucket exists
-aws s3 ls s3://sample-game-app-terraform-state-750761633674
+aws s3 ls s3://sample-game-app-tfstate-<YOUR_ACCOUNT_ID>
 
 # Check DynamoDB table exists
-aws dynamodb describe-table --table-name terraform-state-lock --region us-east-1
+aws dynamodb describe-table --table-name terraform-state-lock-<YOUR_ACCOUNT_ID> --region us-east-1
 
 # Verify Terraform backend configuration
 terraform init
@@ -59,19 +59,19 @@ terraform init
 ## Important Notes
 
 - **S3 Bucket Name**: Must be globally unique. Use `sample-game-app-tfstate-<YOUR_ACCOUNT_ID>`.
-- **DynamoDB Table**: `terraform-state-lock` (for state locking).
-- **Backend Configuration**: After creating the bucket, update `terraform/versions.tf` with the correct bucket name before running the main deployment.
+- **DynamoDB Table**: `terraform-state-lock-<YOUR_ACCOUNT_ID>` (for state locking).
+- **Backend Configuration**: After creating the bucket and table, update `terraform/versions.tf` with the correct names before running the main deployment.
 
 ## Troubleshooting
 
 ### If S3 bucket already exists:
-If you see `BucketAlreadyExists`, someone else might have taken the bucket name. In `backend-setup.tf`, we now use your AWS Account ID to help prevent this. If it still fails, update the `bucket` name in `backend-setup.tf`.
+If you see `BucketAlreadyExists`, someone else might have taken the bucket name. In `backend-setup.tf`, we use your AWS Account ID to help prevent this. If it still fails, update the `bucket` name in `backend-setup.tf`.
 
 ### If DynamoDB table already exists:
-If you get `ResourceInUseException: Table already exists`, it means the lock table was already created. You can:
+If you get `ResourceInUseException: Table already exists`, it means the lock table was already created. In `backend-setup.tf`, we now use your AWS Account ID to make it unique. If you still encounter this, you can:
 1. Use the existing table (it's compatible if the Hash Key is `LockID`).
-2. Delete it and recreate: `aws dynamodb delete-table --table-name terraform-state-lock --region us-east-1`
-3. Or import it: `terraform import aws_dynamodb_table.terraform_state_lock terraform-state-lock`
+2. Delete it and recreate: `aws dynamodb delete-table --table-name terraform-state-lock-<YOUR_ACCOUNT_ID> --region us-east-1`
+3. Or import it: `terraform import aws_dynamodb_table.terraform_state_lock terraform-state-lock-<YOUR_ACCOUNT_ID>`
 
 ### If Terraform init fails:
 1. Verify AWS credentials are configured
@@ -85,11 +85,11 @@ The backend is configured in `versions.tf`:
 
 ```hcl
 backend "s3" {
-  bucket         = "sample-game-app-terraform-state-750761633674"
+  bucket         = "sample-game-app-tfstate-<YOUR_ACCOUNT_ID>"
   key            = "sample-game-app/terraform.tfstate"
   region         = "us-east-1"
   encrypt        = true
-  dynamodb_table = "terraform-state-lock"
+  dynamodb_table = "terraform-state-lock-<YOUR_ACCOUNT_ID>"
 }
 ```
 

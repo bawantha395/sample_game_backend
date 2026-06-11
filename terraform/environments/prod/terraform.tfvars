@@ -5,7 +5,7 @@ aws_region  = "us-east-1"
 
 # Database
 db_username       = "admin"
-db_instance_class = "db.t3.small"
+db_instance_class = "db.t3.micro"
 
 # App
 app_count = 3
