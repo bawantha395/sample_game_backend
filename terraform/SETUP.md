@@ -66,7 +66,7 @@ terraform init
 ## Troubleshooting
 
 ### If RDS Password fails:
-If you see `InvalidParameterValue: Invalid master password`, ensure your `db_password` meets the requirements:
+If you see `InvalidParameterValue: Invalid master password` from the AWS provider, ensure your `db_password` meets the requirements:
 1. Minimum 8 characters.
 2. Only printable ASCII characters.
 3. Does NOT contain `/`, `@`, `"`, or space.
