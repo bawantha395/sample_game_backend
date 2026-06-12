@@ -29,21 +29,17 @@ The infrastructure includes:
    # Environment specific variables are in terraform/environments/{env}/terraform.tfvars
    ```
 
-2. **Deploy infrastructure:**
-   ```bash
-   cd terraform
-   ./deploy.sh dev  # or staging, prod
-   ```
+2. **Wait for CI/CD to deploy:**
+   Push your changes to the `develop` or `prod` branch. The GitHub Actions pipeline will automatically:
+   - Run tests
+   - Provision infrastructure
+   - Build and push the Docker image
+   - Deploy to ECS
 
-3. **Build and push Docker image:**
+3. **Access your application:**
+   Check the GitHub Action logs for the application URL or run:
    ```bash
-   ./build-and-push.sh dev  # or staging, prod
-   ```
-
-4. **Access your application:**
-   The application URL will be printed at the end of the deployment or build script.
-   ```bash
-   cd terraform
+   cd terraform/environments/dev # or staging, prod
    terraform output -raw application_url
    ```
 
@@ -67,7 +63,11 @@ The infrastructure includes:
 
 ```
 terraform/
-├── environments/         # Environment-specific configurations (dev, staging, prod)
+├── environments/         # Environment-specific standalone root configurations
+│   ├── dev/              # Development environment
+│   ├── staging/          # Staging environment
+│   └── prod/             # Production environment
+├── shared/               # Shared infrastructure (S3 backend, DynamoDB lock)
 ├── modules/              # Reusable infrastructure modules
 │   ├── networking/       # VPC, Subnets, Gateways, Routing
 │   ├── security/         # Security Groups
@@ -76,23 +76,25 @@ terraform/
 │   ├── ecr/              # ECR Repository
 │   ├── compute/          # ECS Cluster, Service, Task Definition
 │   └── database/         # RDS Instance and Subnet Group
-├── main.tf               # Orchestrates modules
-├── variables.tf          # Global variable definitions
-├── outputs.tf            # Root output values
-├── providers.tf          # AWS provider configuration
-├── data.tf               # AWS data sources
-├── locals.tf             # Shared local values
-├── versions.tf           # Terraform and provider versions
-├── deploy.sh             # Deployment script (environment-aware)
-├── destroy.sh            # Destruction script (environment-aware)
+├── global_variables.tf   # Centralized variable definitions (linked to environments)
 └── README.md             # This file
 ```
+
+### Centralized Variable Management
+To reduce redundancy, all common variables are defined in `terraform/global_variables.tf`. Each environment folder (`dev`, `staging`, `prod`) contains a symbolic link to this file named `variables.tf`. 
+
+- **To add a new variable**: Add it only to `terraform/global_variables.tf`.
+- **To change a default**: Change it in `terraform/global_variables.tf`.
+- **To provide environment values**: Update the `terraform.tfvars` file in the specific environment directory.
 
 ## Manual Deployment
 
 If you prefer to run Terraform commands manually:
 
 ```bash
+# Go to the environment directory
+cd terraform/environments/dev
+
 # Initialize
 terraform init
 
@@ -164,14 +166,9 @@ aws rds describe-db-instances --db-instance-identifier $(terraform output -raw r
 
 ## Cleanup
 
-To destroy all resources for a specific environment:
+To destroy resources for a specific environment, use the manual **Destroy** action in the GitHub Actions workflow.
 
-```bash
-cd terraform
-./destroy.sh dev  # or staging, prod
-```
-
-Or manually:
+Or manually from the environment directory:
 ```bash
 terraform destroy
 ```

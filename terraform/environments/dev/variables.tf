@@ -13,7 +13,7 @@ variable "app_name" {
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string
-  default     = "prod"
+  default     = "dev"
 }
 
 variable "db_username" {
@@ -101,7 +101,7 @@ variable "tags" {
   type        = map(string)
   default = {
     Project     = "Sample Game Backend"
-    Environment = "prod"
+    Environment = "dev"
     ManagedBy   = "terraform"
   }
 }

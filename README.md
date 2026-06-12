@@ -58,23 +58,16 @@ docker-compose up --build -d
 ### Option 2: Local Development (Java + Maven)
 
 ```bash
-# On Linux/Mac
-./build.sh
+# Run tests
+./mvnw test
 
-# On Windows
-build.bat
+# Package the application
+./mvnw clean package
 ```
 
 ### Option 3: Cloud Deployment
 
-```bash
-# Deploy infrastructure
-cd terraform
-./deploy.sh dev  # or staging, prod
-
-# Build and push application
-./build-and-push.sh dev  # or staging, prod
-```
+The project is fully automated via GitHub Actions. Push your changes to the `develop` or `prod` branch to trigger a deployment.
 
 ## 🔧 CI/CD Pipeline
 
@@ -136,8 +129,6 @@ backend/
 ├── src/test/java/           # Test code
 ├── .github/workflows/       # GitHub Actions
 ├── terraform/               # Infrastructure as code (environment-aware)
-├── build-and-push.sh        # Local Docker deployment
-├── build.sh                 # Local app build
 └── docker-compose.yml       # Local development
 ```
 
@@ -176,17 +167,11 @@ git push origin develop
 ### **Production Environment**
 ```bash
 # Automatic deployment on push to main branch
-git push origin main
+git push origin prod
 ```
 
-### **Manual Deployment**
-```bash
-# Deploy to development
-./build-and-push.sh dev
-
-# Deploy to production
-./build-and-push.sh prod
-```
+### **Automated Infrastructure Actions**
+Manual actions (like `destroy`) can be triggered through the "Actions" tab in the GitHub repository.
 
 ## 📈 Monitoring & Observability
 

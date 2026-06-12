@@ -1,5 +1,21 @@
+# Local values for Prod
+locals {
+  environment = "prod"
+  app_name    = "sample-game-app"
+  name_prefix = "${local.app_name}-${local.environment}"
+  common_tags = merge(var.tags, {
+    Environment = local.environment
+    Project     = local.app_name
+    ManagedBy   = "terraform"
+  })
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 module "networking" {
-  source = "./modules/networking"
+  source = "../../modules/networking"
 
   name_prefix        = local.name_prefix
   common_tags        = local.common_tags
@@ -7,7 +23,7 @@ module "networking" {
 }
 
 module "security" {
-  source = "./modules/security"
+  source = "../../modules/security"
 
   name_prefix = local.name_prefix
   common_tags = local.common_tags
@@ -16,7 +32,7 @@ module "security" {
 }
 
 module "iam" {
-  source = "./modules/iam"
+  source = "../../modules/iam"
 
   name_prefix        = local.name_prefix
   common_tags        = local.common_tags
@@ -24,7 +40,7 @@ module "iam" {
 }
 
 module "alb" {
-  source = "./modules/alb"
+  source = "../../modules/alb"
 
   name_prefix       = local.name_prefix
   common_tags       = local.common_tags
@@ -35,7 +51,7 @@ module "alb" {
 }
 
 module "ecr" {
-  source = "./modules/ecr"
+  source = "../../modules/ecr"
 
   name_prefix        = local.name_prefix
   common_tags        = local.common_tags
@@ -43,7 +59,7 @@ module "ecr" {
 }
 
 module "compute" {
-  source = "./modules/compute"
+  source = "../../modules/compute"
 
   name_prefix        = local.name_prefix
   common_tags        = local.common_tags
@@ -69,7 +85,7 @@ module "compute" {
 }
 
 module "database" {
-  source = "./modules/database"
+  source = "../../modules/database"
 
   name_prefix        = local.name_prefix
   common_tags        = local.common_tags
