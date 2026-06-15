@@ -164,3 +164,7 @@
             git diff-index --quiet HEAD || git commit -m "chore(gitops): auto-synced variables for ${{ env.TARGET_ENV }} environment [skip ci]"
             git push origin prod
   
+  
+  
+  
+  
