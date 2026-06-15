@@ -5,7 +5,9 @@ on:
     branches:
       - prod
     paths:
-      - 'application/**'
+      - 'src/**'
+      - 'pom.xml'
+      - 'Dockerfile'
 
 jobs:
   build:
@@ -38,5 +40,5 @@ jobs:
           ECR_REPOSITORY: prod-game-app-repo
           IMAGE_TAG: ${{ steps.set-tag.outputs.tag }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./application
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
