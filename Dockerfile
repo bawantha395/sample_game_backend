@@ -15,6 +15,7 @@ FROM eclipse-temurin:17-jdk-jammy
 
 WORKDIR /app
 
+
 # Install netcat for wait-for-it script
 RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
 
