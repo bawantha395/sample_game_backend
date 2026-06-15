@@ -18,6 +18,8 @@ provider "aws" {
   region = var.aws_region
 }
 
+
+
 # Root-level instantiation of modules using structural code mapping
 module "foundation" {
   source               = "../../modules/aws/foundation"
