@@ -6,6 +6,7 @@ on:
       - prod
     paths:
       - 'terraform/**'
+  workflow_dispatch:
 
 jobs:
   apply:
@@ -42,7 +43,6 @@ jobs:
         run: |
           RAW_ENDPOINT=$(terraform -chdir=terraform/environments/prod output -raw database_endpoint)
           CLEAN_HOST=$(echo $RAW_ENDPOINT | cut -d':' -f1)
-          
           sed -i "s|RDS_ENDPOINT_PLACEHOLDER|$CLEAN_HOST|g" kubernetes/environments/prod/kustomization.yaml
 
       - name: Commit and Push Infrastructure Updates
@@ -51,4 +51,4 @@ jobs:
           git config --global user.email "actions@github.com"
           git add kubernetes/environments/prod/kustomization.yaml
           git diff-index --quiet HEAD || git commit -m "infra: automatically synced rds endpoint from terraform apply"
-          git push
+          git push origin prod

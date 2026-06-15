@@ -26,4 +26,4 @@ COPY wait-for-it.sh .
 COPY wait-for-mysql.sh .
 RUN chmod +x wait-for-it.sh wait-for-mysql.sh
 
-ENTRYPOINT ["./wait-for-mysql.sh", "java", "-jar", "target/api.jar"]
+ENTRYPOINT ["./wait-for-mysql.sh", "java", "-jar", "target/api.jar"]# Manual Trigger Force
