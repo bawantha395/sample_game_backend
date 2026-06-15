@@ -36,14 +36,14 @@ module "registry" {
 }
 
 module "database" {
-  source             = "../../modules/aws/database"
-  environment        = var.environment
-  app_name           = var.app_name
-  private_subnet_ids = module.foundation.private_subnet_ids
-  vpc_id             = module.foundation.vpc_id
-  db_username        = var.db_username
-  db_password        = var.db_password
-  eks_security_group_id = module.eks.cluster_security_group_id
+  source                        = "../../modules/aws/database"
+  environment                   = var.environment
+  app_name                      = var.app_name
+  private_subnet_ids            = module.foundation.private_subnet_ids
+  vpc_id                        = module.foundation.vpc_id
+  db_username                   = var.db_username
+  db_password                   = var.db_password
+  eks_cluster_security_group_id = module.eks.cluster_security_group_id
 }
 
 module "eks" {
