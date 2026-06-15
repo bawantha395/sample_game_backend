@@ -37,7 +37,7 @@ module "registry" {
 module "database" {
   source                        = "../../modules/aws/database"
   environment                   = var.environment
-  db_instance_class             = "db.t2.micro"
+  db_instance_class             = "db.t3.micro"
   private_subnet_ids            = module.foundation.private_subnet_ids
   vpc_id                        = module.foundation.vpc_id
   db_username                   = var.db_username

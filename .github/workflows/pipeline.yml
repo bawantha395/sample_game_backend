@@ -69,6 +69,11 @@ jobs:
           terraform init \
             -backend-config="bucket=${{ steps.bootstrap.outputs.using_bucket }}" \
             -backend-config="dynamodb_table=${{ steps.bootstrap.outputs.using_table }}"
+          
+          echo "=== EXECUTING TERRAFORM PLAN ==="
+          terraform plan
+          
+          echo "=== EXECUTING TERRAFORM APPLY ==="
           terraform apply -auto-approve
         env:
           TF_VAR_db_username: ${{ secrets.DB_USERNAME_PROD }}
