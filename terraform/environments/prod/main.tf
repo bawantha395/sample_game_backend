@@ -18,8 +18,6 @@ provider "aws" {
   region = var.aws_region
 }
 
-
-
 # Root-level instantiation of modules using structural code mapping
 module "foundation" {
   source               = "../../modules/aws/foundation"
@@ -28,7 +26,6 @@ module "foundation" {
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
   availability_zones   = var.availability_zones
-  app_name             = var.app_name
 }
 
 module "registry" {
