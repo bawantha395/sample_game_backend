@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+patches:
+  - path: patch.yaml
+
+configMapGenerator:
+  - name: game-app-config
+    behavior: merge
+    literals:
+      - SPRING_PROFILES_ACTIVE=dev
+      - MYSQL_HOST=dev-game-db.xxxxxx.us-east-1.rds.amazonaws.com
+      - MYSQL_PORT=3306
+      - MYSQL_DB=game_db_dev
+      - MYSQL_USER=admin

@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: game-app
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+        - name: game-app-container
+          image: YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/prod-game-app-repo:latest

@@ -1,9 +1,9 @@
 terraform {
   backend "s3" {
-    bucket         = "sample-game-app-tfstate-530352103493"
+    bucket         = "sample-game-app-terraform-state-2026"
     key            = "dev/terraform.tfstate"
     region         = "us-east-1"
     encrypt        = true
-    dynamodb_table = "terraform-state-lock-530352103493"
+    dynamodb_table = "terraform-state-lock"
   }
 }

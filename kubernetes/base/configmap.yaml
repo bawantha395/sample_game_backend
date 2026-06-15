@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: game-app-config
+data:
+  SPRING_PROFILES_ACTIVE: "prod"
+  MYSQL_PORT: "3306"
+  MYSQL_DB: "game_db"

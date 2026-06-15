@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: game-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: game-app
+  template:
+    metadata:
+      labels:
+        app: game-app
+    spec:
+      serviceAccountName: game-app-sa
+      containers:
+        - name: game-app-container
+          image: YOUR_ECR_REPO_URL:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: game-app-config
+          volumeMounts:
+            - name: game-data-volume
+              mountPath: /app/data
+      volumes:
+        - name: game-data-volume
+          persistentVolumeClaim:
+            claimName: game-storage-pvc

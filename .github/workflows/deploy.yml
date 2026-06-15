@@ -1,0 +1,48 @@
+name: Deploy Application
+
+on:
+  workflow_run:
+    workflows: ["Build Application"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    name: Update GitOps Manifests
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Get AWS Account ID
+        id: aws-info
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+          echo "account_id=$ACCOUNT_ID" >> $GITHUB_OUTPUT
+
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Dynamic Image Tag Update
+        run: |
+          AWS_ACCOUNT=${{ steps.aws-info.outputs.account_id }}
+          cd kubernetes/environments/prod
+          kustomize edit set image YOUR_ECR_REPO_URL=${AWS_ACCOUNT}.dkr.ecr.us-east-1.amazonaws.com/prod-game-app-repo:${{ github.event.workflow_run.head_sha }}
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "GitHub Actions Automation"
+          git config --global user.email "actions@github.com"
+          git add kubernetes/environments/prod/patch.yaml
+          git diff-index --quiet HEAD || git commit -m "app: auto-deployed container tag ${{ github.event.workflow_run.head_sha }}"
+          git push
