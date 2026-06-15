@@ -46,9 +46,14 @@ module "database" {
 }
 
 module "eks" {
-  source             = "../../modules/aws/eks"
-  environment        = var.environment
-  app_name           = var.app_name
-  private_subnet_ids = module.foundation.private_subnet_ids
-  vpc_id             = module.foundation.vpc_id
+  source              = "../../modules/aws/eks"
+  environment         = var.environment
+  cluster_name        = "prod-game-app-cluster"
+  kubernetes_version  = "1.30"
+  private_subnet_ids  = module.foundation.private_subnet_ids
+  vpc_id              = module.foundation.vpc_id
+  node_min_size       = 1
+  node_desired_size   = 2
+  node_max_size       = 3
+  node_instance_types = ["t3.small"]
 }
