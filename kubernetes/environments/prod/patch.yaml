@@ -8,4 +8,4 @@ spec:
     spec:
       containers:
         - name: game-app-container
-          image: YOUR_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/prod-game-app-repo:latest
+          image: YOUR_ECR_REPO_URL:latest

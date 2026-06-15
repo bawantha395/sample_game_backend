@@ -1,0 +1,85 @@
+name: Core GitOps Pipeline
+
+on:
+  push:
+    branches:
+      - prod
+  workflow_dispatch:
+
+jobs:
+  orchestrate:
+    name: Core Provision and Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout Code Base
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 2. Configure AWS Access
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: 3. Initialize Terraform Engine
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: 4. Execute Infrastructure Synchronization
+        run: |
+          cd terraform/environments/prod
+          terraform init
+          terraform apply -auto-approve
+        env:
+          TF_VAR_db_username: ${{ secrets.DB_USERNAME_PROD }}
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD_PROD }}
+
+      - name: 5. Extract Live Cloud Target Data
+        id: cloud-data
+        run: |
+          cd terraform/environments/prod
+          RAW_DB=$(terraform output -raw database_endpoint)
+          CLEAN_DB=$(echo $RAW_DB | cut -d':' -f1)
+          RAW_ECR=$(terraform output -raw ecr_repository_url)
+          
+          echo "db_host=$CLEAN_DB" >> $GITHUB_OUTPUT
+          echo "ecr_url=$RAW_ECR" >> $GITHUB_OUTPUT
+
+      - name: 6. Inject Live Database Configurations
+        run: |
+          sed -i "s|RDS_ENDPOINT_PLACEHOLDER|${{ steps.cloud-data.outputs.db_host }}|g" kubernetes/environments/prod/kustomization.yaml
+
+      - name: 7. Authenticate Container Engine to AWS ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 8. Build and Publish Application Image
+        run: |
+          IMAGE_TAG=${GITHUB_SHA::7}
+          REGISTRY_URL=${{ steps.cloud-data.outputs.ecr_url }}
+          
+          docker build -t $REGISTRY_URL:$IMAGE_TAG .
+          docker push $REGISTRY_URL:$IMAGE_TAG
+          
+          echo "FINAL_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: 9. Set Up Kustomize Controller
+        uses: imranismail/setup-kustomize@v2
+
+      - name: 10. Update Kubernetes Resource Blueprints
+        run: |
+          REGISTRY_URL=${{ steps.cloud-data.outputs.ecr_url }}
+          cd kubernetes/environments/prod
+          kustomize edit set image YOUR_ECR_REPO_URL=$REGISTRY_URL:${{ env.FINAL_TAG }}
+
+      - name: 11. Commit and Push Manifest Changes to Git
+        run: |
+          git config --global user.name "GitHub Actions Automation"
+          git config --global user.email "actions@github.com"
+          git add kubernetes/environments/prod/kustomization.yaml
+          git add kubernetes/environments/prod/patch.yaml
+          git diff-index --quiet HEAD || git commit -m "chore(gitops): auto-synced endpoints and image version ${{ env.FINAL_TAG }} [skip ci]"
+          git push origin prod
