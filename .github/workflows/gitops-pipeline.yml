@@ -1,5 +1,5 @@
 
-  name: Core GitOps Pipeline
+  name: gitops-pipeline
 
   on:
     push:
