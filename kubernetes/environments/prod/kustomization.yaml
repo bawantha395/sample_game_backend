@@ -2,17 +2,21 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../../base
+- ../../base
 
 patches:
-  - path: patch.yaml
+- path: patch.yaml
 
 configMapGenerator:
-  - name: game-app-config
-    behavior: merge
-    literals:
-      - SPRING_PROFILES_ACTIVE=prod
-      - MYSQL_HOST=RDS_ENDPOINT_PLACEHOLDER
-      - MYSQL_PORT=3306
-      - MYSQL_DB=game_db
-      - MYSQL_USER=admin
+- behavior: merge
+  literals:
+  - SPRING_PROFILES_ACTIVE=prod
+  - MYSQL_HOST=prod-game-db.c8tsk48m85k3.us-east-1.rds.amazonaws.com
+  - MYSQL_PORT=3306
+  - MYSQL_DB=game_db
+  - MYSQL_USER=admin
+  name: game-app-config
+images:
+- name: YOUR_ECR_REPO_URL
+  newName: 530352103493.dkr.ecr.us-east-1.amazonaws.com/prod-game-app-repo
+  newTag: 5fb6892
