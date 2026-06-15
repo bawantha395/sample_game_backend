@@ -5,25 +5,40 @@ variable "aws_region" {
 
 variable "environment" {
   type    = string
-  default = "dev"
+  default = "prod"
+}
+
+variable "app_name" {
+  type    = string
+  default = "game-app"
 }
 
 variable "vpc_cidr" {
-  type = string
+  type    = string
+  default = "10.0.0.0/16"
 }
 
 variable "public_subnet_cidrs" {
-  type = list(string)
+  type    = list(string)
+  default = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
 }
 
 variable "private_subnet_cidrs" {
-  type = list(string)
+  type    = list(string)
+  default = ["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24"]
 }
 
 variable "availability_zones" {
-  type = list(string)
+  type    = list(string)
+  default = ["us-east-1a", "us-east-1b", "us-east-1c"]
 }
 
-variable "db_username" { type = string }
-variable "db_password" { type = string, sensitive = true }
-variable "app_name" { type = string, default = "game-app" }
+variable "db_username" {
+  type    = string
+  default = "admin"
+}
+
+variable "db_password" {
+  type      = string
+  sensitive = true
+}
