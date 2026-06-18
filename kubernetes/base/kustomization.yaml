@@ -13,3 +13,4 @@ resources:
   - pvc.yaml
   - secret-store.yaml
   - external-secret.yaml
+  - serviceaccount.yaml
