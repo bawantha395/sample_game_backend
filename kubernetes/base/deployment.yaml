@@ -41,10 +41,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: game-app-config
-          volumeMounts:
-            - name: game-data-volume
-              mountPath: /app/data
-      volumes:
-        - name: game-data-volume
-          persistentVolumeClaim:
-            claimName: game-storage-pvc
+#          volumeMounts:
+#            - name: game-data-volume
+#              mountPath: /app/data
+#      volumes:
+#        - name: game-data-volume
+#          persistentVolumeClaim:
+#            claimName: game-storage-pvc
