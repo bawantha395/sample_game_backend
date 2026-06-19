@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: 'https://github.com/bawantha395/sample_game_backend.git'
-    targetRevision: HEAD
+    targetRevision: prod
     path: kubernetes/environments/prod
   destination:
     server: 'https://kubernetes.default.svc'
