@@ -238,3 +238,46 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Built with ❤️ using Spring Boot, Docker, AWS, and GitHub Actions**
+
+
+
+
+how to run after deployed
+
+
+aws eks list-clusters
+
+aws eks update-kubeconfig --region us-east-1 --name <your-cluster-name>
+
+
+Install Argo CD
+
+# Create the namespace
+kubectl create namespace argocd
+
+# Install Argo CD using the official stable manifests
+kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+Re-install the External Secrets Operator
+helm install external-secrets external-secrets/external-secrets \
+-n game-app \
+--create-namespace \
+--set webhook.port=9443
+
+Apply your Argo CD Application File
+kubectl apply -f application-prod.yaml
+
+Verify everything works
+kubectl get app game-app-prod -n argocd
+
+
+
+acess to argocd ui
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+
+usename admin
+get argo password
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode; echo
+
+
+go to https://localhost:8080
