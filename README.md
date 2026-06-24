@@ -248,6 +248,7 @@ how to run after deployed
 aws eks list-clusters
 
 aws eks update-kubeconfig --region us-east-1 --name <your-cluster-name>
+aws eks update-kubeconfig --region us-east-1 --name prod-prod-game-app-cluster
 
 
 Install Argo CD
