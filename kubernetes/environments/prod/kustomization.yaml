@@ -19,4 +19,4 @@ configMapGenerator:
 images:
 - name: YOUR_ECR_REPO_URL
   newName: 530352103493.dkr.ecr.us-east-1.amazonaws.com/prod-game-app-repo
-  newTag: 9cc4a2f
+  newTag: 5efb1d2
