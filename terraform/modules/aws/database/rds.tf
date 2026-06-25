@@ -22,6 +22,8 @@ resource "aws_db_instance" "main" {
   password             = var.db_password
   skip_final_snapshot  = true
 
+  apply_immediately    = true
+
   vpc_security_group_ids = [aws_security_group.rds.id]
   db_subnet_group_name   = aws_db_subnet_group.main.name
 }
