@@ -15,4 +15,4 @@ configMapGenerator:
       - MYSQL_HOST=dev-game-db.xxxxxx.us-east-1.rds.amazonaws.com
       - MYSQL_PORT=3306
       - MYSQL_DB=game_db_dev
-      - MYSQL_USER=admin
+      - MYSQL_USER=dbadmin

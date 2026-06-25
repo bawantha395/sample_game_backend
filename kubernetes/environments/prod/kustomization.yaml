@@ -14,7 +14,7 @@ configMapGenerator:
   - MYSQL_HOST=prod-game-db.c8tsk48m85k3.us-east-1.rds.amazonaws.com
   - MYSQL_PORT=3306
   - MYSQL_DB=game_db
-  - MYSQL_USER=admin
+  - MYSQL_USER=dbadmin
   name: game-app-config
 images:
 - name: YOUR_ECR_REPO_URL

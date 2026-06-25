@@ -32,6 +32,11 @@ variable "db_instance_class" {
 variable "db_username" {
   type        = string
   description = "The master username for the database"
+
+  validation {
+    condition     = !contains(["admin"], var.db_username)
+    error_message = "The username 'admin' is reserved by RDS MySQL and cannot be used."
+  }
 }
 
 variable "db_password" {

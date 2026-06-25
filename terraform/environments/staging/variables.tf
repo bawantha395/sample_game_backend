@@ -23,3 +23,13 @@ variable "private_subnet_cidrs" {
 variable "availability_zones" {
   type = list(string)
 }
+
+variable "db_username" {
+  type    = string
+  default = "dbadmin"
+}
+
+variable "db_password" {
+  type      = string
+  sensitive = true
+}
