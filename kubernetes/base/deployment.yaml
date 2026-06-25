@@ -41,6 +41,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: game-app-config
+          env:
+            - name: MYSQL_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: game-app-db-secret
+                  key: SPRING_DATASOURCE_PASSWORD
 #          volumeMounts:
 #            - name: game-data-volume
 #              mountPath: /app/data

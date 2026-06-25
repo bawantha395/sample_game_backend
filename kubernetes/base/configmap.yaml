@@ -6,3 +6,4 @@ data:
   SPRING_PROFILES_ACTIVE: "prod"
   MYSQL_PORT: "3306"
   MYSQL_DB: "game_db"
+  MYSQL_USER: "game_admin"
