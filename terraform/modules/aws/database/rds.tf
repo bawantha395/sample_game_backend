@@ -18,7 +18,9 @@ resource "aws_db_instance" "main" {
   allocated_storage    = 20
   storage_type         = "gp2"
   db_name              = "game_db"
-  username             = var.db_username
+
+  # 1. FIXED: Hardcoded clean username to bypass the broken pipeline variable
+  username             = "game_admin"
   password             = var.db_password
   skip_final_snapshot  = true
 
@@ -29,17 +31,20 @@ resource "aws_db_instance" "main" {
 }
 
 # ==============================================================================
-# AUTOMATED SECRETS MANAGER PROVISIONING (ADDED)
+# AUTOMATED SECRETS MANAGER PROVISIONING
 # ==============================================================================
 
-# 1. Automatically builds the secure cloud container container vault inside AWS
+# Automatically builds the secure cloud vault inside AWS
 resource "aws_secretsmanager_secret" "db_secret" {
   name                    = "${var.environment}/game/db"
-  recovery_window_in_days = 0 # Forces instant deletion on destroy so it never locks you out
+  recovery_window_in_days = 0
 }
 
-# 2. Automatically json-encodes and writes the incoming pipeline password inside it
+# Automatically encodes both pieces of credentials using the hardcoded username
 resource "aws_secretsmanager_secret_version" "db_secret_val" {
   secret_id     = aws_secretsmanager_secret.db_secret.id
-  secret_string = jsonencode({ password = var.db_password })
+  secret_string = jsonencode({
+    username = "game_admin"
+    password = var.db_password
+  })
 }

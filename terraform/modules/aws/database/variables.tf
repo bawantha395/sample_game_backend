@@ -34,8 +34,8 @@ variable "db_username" {
   description = "The master username for the database"
 
   validation {
-    condition     = !contains(["admin"], var.db_username)
-    error_message = "The username 'admin' is reserved by RDS MySQL and cannot be used."
+    condition     = !contains(["admin", "root", "mysql.sys", "rdsadmin"], var.db_username)
+    error_message = "The username provided is a reserved word in RDS MySQL (admin, root, mysql.sys, rdsadmin) and cannot be used."
   }
 }
 
