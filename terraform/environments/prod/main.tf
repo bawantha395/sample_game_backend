@@ -5,6 +5,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
   }
 
   # Partial Configuration: The pipeline will inject the bucket and dynamo table dynamically
@@ -69,9 +73,34 @@ module "dns_cdn" {
   domain_name = "tcmslk.me"
   # Note: alb_dns_name should be fetched from the ALB created by the Ingress controller
   # In a real scenario, you might need to use a data source or hardcode it after first run
-  alb_dns_name = "k8s-issueapp-microser-xxxxxxxxxx.us-east-1.elb.amazonaws.com" 
+  alb_dns_name = "k8s-issueapp-microser-xxxxxxxxxx.us-east-1.elb.amazonaws.com"
 
   providers = {
     aws.us_east_1 = aws.us_east_1
   }
+}
+
+# ==============================================================================
+# AUTOMATED JWT SECRET CONFIGURATION FOR API GATEWAY
+# ==============================================================================
+
+# 1. Generates a cryptographically secure 32-character string for the JWT token
+resource "random_password" "jwt_secret" {
+  length  = 32
+  special = false
+}
+
+# 2. Creates the container entity inside AWS Secrets Manager
+resource "aws_secretsmanager_secret" "jwt" {
+  name                    = "${var.environment}/game/jwt"
+  description             = "Automatically managed JWT Token for API Gateway"
+  recovery_window_in_days = 0 # Ensures immediate deletion/recreation if destroyed
+}
+
+# 3. Formats and injects the JSON string to match the exact property key expected by Kubernetes
+resource "aws_secretsmanager_secret_version" "jwt_value" {
+  secret_id     = aws_secretsmanager_secret.jwt.id
+  secret_string = jsonencode({
+    secret = random_password.jwt_secret.result
+  })
 }
