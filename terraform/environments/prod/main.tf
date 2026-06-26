@@ -51,8 +51,8 @@ module "database" {
   vpc_id                        = module.foundation.vpc_id
   db_username                   = var.db_username
   db_password                   = var.db_password
-  # FIX: Changed from cluster_security_group_id to allow worker node pods to reach RDS
-  eks_cluster_security_group_id = module.eks.node_security_group_id
+  # ✅ FIXED: Reverted to the valid exported output from your EKS module
+  eks_cluster_security_group_id = module.eks.cluster_security_group_id
 }
 
 module "eks" {
@@ -65,7 +65,7 @@ module "eks" {
   node_min_size       = 1
   node_desired_size   = 2
   node_max_size       = 3
-  # FIX: Upgraded from t3.small to double RAM capacity and clear IP allocations
+  # 🚀 KEPT: Upgraded to t3.medium to double RAM and resolve IP allocation limits
   node_instance_types = ["t3.medium"]
 }
 
@@ -86,20 +86,17 @@ module "dns_cdn" {
 # AUTOMATED JWT SECRET CONFIGURATION FOR API GATEWAY
 # ==============================================================================
 
-# 1. Generates a cryptographically secure 32-character string for the JWT token
 resource "random_password" "jwt_secret" {
   length  = 32
   special = false
 }
 
-# 2. Creates the container entity inside AWS Secrets Manager
 resource "aws_secretsmanager_secret" "jwt" {
   name                    = "${var.environment}/game/jwt"
   description             = "Automatically managed JWT Token for API Gateway"
   recovery_window_in_days = 0
 }
 
-# 3. Formats and injects the JSON string to match the exact property key expected by Kubernetes
 resource "aws_secretsmanager_secret_version" "jwt_value" {
   secret_id     = aws_secretsmanager_secret.jwt.id
   secret_string = jsonencode({
