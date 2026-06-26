@@ -10,7 +10,7 @@ variable "environment" {
 
 variable "app_name" {
   type    = string
-  default = "game-app"
+  default = "issue-app"
 }
 
 variable "vpc_cidr" {

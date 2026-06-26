@@ -4,19 +4,16 @@ kind: Kustomization
 resources:
 - ../../base
 
-patches:
-- path: patch.yaml
-
-configMapGenerator:
-- behavior: merge
-  literals:
-  - SPRING_PROFILES_ACTIVE=prod
-  - MYSQL_HOST=prod-game-db.c8tsk48m85k3.us-east-1.rds.amazonaws.com
-  - MYSQL_PORT=3306
-  - MYSQL_DB=game_db
-  - MYSQL_USER=game_admin
-  name: game-app-config
 images:
-- name: YOUR_ECR_REPO_URL
-  newName: 530352103493.dkr.ecr.us-east-1.amazonaws.com/prod-game-app-repo
-  newTag: cca26da
+- name: api-gateway
+  newName: 530352103493.dkr.ecr.us-east-1.amazonaws.com/api-gateway
+  newTag: latest
+- name: auth-service
+  newName: 530352103493.dkr.ecr.us-east-1.amazonaws.com/auth-service
+  newTag: latest
+- name: issue-service
+  newName: 530352103493.dkr.ecr.us-east-1.amazonaws.com/issue-service
+  newTag: latest
+- name: frontend-service
+  newName: 530352103493.dkr.ecr.us-east-1.amazonaws.com/frontend-service
+  newTag: latest

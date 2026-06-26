@@ -11,7 +11,7 @@ resource "aws_security_group" "rds" {
 }
 
 resource "aws_db_instance" "main" {
-  identifier           = "${var.environment}-game-db"
+  identifier           = "${var.environment}-issue-db"
   engine               = "mysql"
   engine_version       = "8.0"
   instance_class       = var.db_instance_class
@@ -36,7 +36,7 @@ resource "aws_db_instance" "main" {
 
 # Automatically builds the secure cloud vault inside AWS
 resource "aws_secretsmanager_secret" "db_secret" {
-  name                    = "${var.environment}/game/db"
+  name                    = "${var.environment}/issue/db"
   recovery_window_in_days = 0
 }
 

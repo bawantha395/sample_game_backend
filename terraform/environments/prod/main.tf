@@ -18,6 +18,11 @@ provider "aws" {
   region = var.aws_region
 }
 
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
+}
+
 # Root-level instantiation of modules using structural code mapping
 module "foundation" {
   source               = "../../modules/aws/foundation"
@@ -48,7 +53,7 @@ module "database" {
 module "eks" {
   source              = "../../modules/aws/eks"
   environment         = var.environment
-  cluster_name        = "prod-game-app-cluster"
+  cluster_name        = "prod-issue-app-cluster"
   kubernetes_version  = "1.30"
   private_subnet_ids  = module.foundation.private_subnet_ids
   vpc_id              = module.foundation.vpc_id
@@ -56,4 +61,17 @@ module "eks" {
   node_desired_size   = 2
   node_max_size       = 3
   node_instance_types = ["t3.small"]
+}
+
+module "dns_cdn" {
+  source      = "../../modules/aws/dns_cdn"
+  environment = var.environment
+  domain_name = "tcmslk.me"
+  # Note: alb_dns_name should be fetched from the ALB created by the Ingress controller
+  # In a real scenario, you might need to use a data source or hardcode it after first run
+  alb_dns_name = "k8s-issueapp-microser-xxxxxxxxxx.us-east-1.elb.amazonaws.com" 
+
+  providers = {
+    aws.us_east_1 = aws.us_east_1
+  }
 }

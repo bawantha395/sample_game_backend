@@ -15,7 +15,7 @@ provider "aws" {
     tags = {
       Environment = var.environment
       ManagedBy   = "terraform"
-      Project     = "sample-game-app"
+      Project     = "sample-issue-app"
     }
   }
 }

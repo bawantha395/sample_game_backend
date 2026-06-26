@@ -12,7 +12,7 @@ module "eks" {
   source = "../../modules/aws/eks"
 
   environment        = var.environment
-  cluster_name       = "game-app"
+  cluster_name       = "issue-app"
   kubernetes_version = "1.29"
   
   vpc_id             = module.foundation.vpc_id

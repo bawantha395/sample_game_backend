@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket         = "sample-game-app-terraform-state-2026"
+    bucket         = "sample-issue-app-terraform-state-2026"
     key            = "dev/terraform.tfstate"
     region         = "us-east-1"
     encrypt        = true

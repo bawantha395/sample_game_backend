@@ -51,7 +51,7 @@ resource "aws_iam_openid_connect_provider" "main" {
 
 # 2. Create the IAM role that trusts our fresh EKS cluster context dynamically
 resource "aws_iam_role" "secrets_role" {
-  name = "${var.environment}-game-app-secrets-role"
+  name = "${var.environment}-issue-app-secrets-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -65,7 +65,7 @@ resource "aws_iam_role" "secrets_role" {
         Condition = {
           StringEquals = {
             "${replace(aws_iam_openid_connect_provider.main.url, "https://", "")}:aud" = "sts.amazonaws.com",
-            "${replace(aws_iam_openid_connect_provider.main.url, "https://", "")}:sub" = "system:serviceaccount:game-app:game-app-sa"
+            "${replace(aws_iam_openid_connect_provider.main.url, "https://", "")}:sub" = "system:serviceaccount:issue-app:issue-app-sa"
           }
         }
       }

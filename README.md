@@ -248,7 +248,7 @@ how to run after deployed
 aws eks list-clusters
 
 aws eks update-kubeconfig --region us-east-1 --name <your-cluster-name>
-aws eks update-kubeconfig --region us-east-1 --name prod-prod-game-app-cluster
+aws eks update-kubeconfig --region us-east-1 --name prod-prod-issue-app-cluster
 
 
 Install Argo CD
@@ -261,7 +261,7 @@ kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubuse
 
 Re-install the External Secrets Operator
 helm install external-secrets external-secrets/external-secrets \
--n game-app \
+-n issue-app \
 --create-namespace \
 --set webhook.port=9443
 
@@ -269,7 +269,7 @@ Apply your Argo CD Application File
 kubectl apply -f application-prod.yaml
 
 Verify everything works
-kubectl get app game-app-prod -n argocd
+kubectl get app issue-app-prod -n argocd
 
 
 

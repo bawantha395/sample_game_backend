@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "sample-game-app-terraform-state-2026"
+  bucket = "sample-issue-app-terraform-state-2026"
 
   tags = {
     Name        = "Terraform State Bucket"
