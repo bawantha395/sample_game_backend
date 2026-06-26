@@ -14,6 +14,6 @@ output "database_endpoint" {
   value = module.database.db_endpoint
 }
 
-output "ecr_repository_url" {
-  value = module.registry.repository_url
+output "ecr_repository_urls" {
+  value = module.registry.repository_urls
 }
